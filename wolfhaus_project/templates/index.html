@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Transcription</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    #transcription {
+      margin-top: 20px;
+      border-top: 2px solid #ddd;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Audio Transcription with Whisper</h1>
+
+  <button id="start-recording">Start Recording</button>
+  <button id="stop-recording" disabled>Stop Recording</button>
+
+  <div id="transcription"></div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    // Start recording audio
+    document.getElementById("start-recording").onclick = async function () {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+
+        // Send the audio file to the backend for transcription
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "audio.wav");
+
+        fetch('/transcribe', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("transcription").innerHTML = `<h3>Transcription:</h3><p>${data.transcription}</p>`;
+        })
+        .catch(error => console.error("Error transcribing audio:", error));
+      };
+
+      mediaRecorder.start();
+      document.getElementById("start-recording").disabled = true;
+      document.getElementById("stop-recording").disabled = false;
+    };
+
+    // Stop recording audio
+    document.getElementById("stop-recording").onclick = function () {
+      mediaRecorder.stop();
+      document.getElementById("start-recording").disabled = false;
+      document.getElementById("stop-recording").disabled = true;
+    };
+  </script>
+
+</body>
+</html>

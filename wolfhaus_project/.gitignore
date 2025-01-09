@@ -1,0 +1,22 @@
+# Python-related files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment
+env/
+bin/
+lib/
+pyvenv.cfg
+
+# Data and user-generated files
+data/
+uploads/
+reports/
+conversations/
+
+# IDE/Editor specific files
+*.workspace
+*.vscode/
+*.idea/
+.DS_Store
